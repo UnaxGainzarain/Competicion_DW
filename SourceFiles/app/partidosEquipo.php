@@ -46,6 +46,8 @@ if (!$equipo) {
 
 $nombre_equipo = $equipo['nombre'];
 
+
+
 // Consulta para obtener los partidos del equipo (local o visitante)
 $stmt = $db->prepare("SELECT 
             p.jornada,
