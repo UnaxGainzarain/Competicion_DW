@@ -8,6 +8,8 @@
  * @author ander_frago@cuatrovientos.org
  */
 
+session_start(); // Iniciar la sesión al principio de todo
+
 require_once __DIR__ . '/../templates/header.php';
 require_once __DIR__ . '/../persistence/DAO/GenericDAO.php';
 require_once __DIR__ . '/../persistence/conf/PersistentManager.php';
@@ -23,6 +25,9 @@ if (!$equipo_id) {
     header('Location: equipos.php');
     exit;
 }
+
+// Guardar el equipo visitado en la sesión para futuras visitas
+$_SESSION['last_visited_team_id'] = $equipo_id;
 
 // Obtener la información del equipo usando el DAO
 $equipo = $equipoDAO->selectById($equipo_id);
