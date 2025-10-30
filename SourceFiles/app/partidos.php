@@ -9,21 +9,14 @@
  */
 
 require_once __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../persistence/DAO/GenericDAO.php';
+require_once __DIR__ . '/../persistence/conf/PersistentManager.php';
+require_once __DIR__ . '/../persistence/DAO/EquipoDAO.php';
+require_once __DIR__ . '/../persistence/DAO/PartidoDAO.php';
 
-// --- Lógica de Base de Datos ---
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "competicion";
-
-// Crear conexión
-$db = new mysqli($servername, $username, $password, $dbname);
-
-// Comprobar conexión
-if ($db->connect_error) {
-  die("La conexión ha fallado: " . $db->connect_error);
-}
+// --- Lógica de la página ---
+$partidoDAO = new PartidoDAO();
+$equipoDAO = new EquipoDAO();
 
 $mensaje = ""; // Variable para mensajes de feedback al usuario
 
@@ -38,82 +31,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nombreLocal'], $_POST[
         if ($idEquipoLocal === $idEquipoVisitante) {
             $mensaje = "<div class='alert alert-danger' role='alert'>Error: Un equipo no puede jugar contra sí mismo.</div>";
         } else {
-            // Validar que los equipos no hayan jugado previamente en la misma jornada
-            $stmt_check = $db->prepare(
-                "SELECT id FROM partidos WHERE jornada = ? AND 
-                ((id_equipo_local = ? AND id_equipo_visitante = ?) OR (id_equipo_local = ? AND id_equipo_visitante = ?))"
-            );
-            $stmt_check->bind_param("iiiii", $jornada, $idEquipoLocal, $idEquipoVisitante, $idEquipoVisitante, $idEquipoLocal);
-            $stmt_check->execute();
-            $res_check = $stmt_check->get_result();
-
-            if ($res_check->num_rows > 0) {
+            if ($partidoDAO->checkExistsInJornada($jornada, $idEquipoLocal, $idEquipoVisitante)) {
                 $mensaje = "<div class='alert alert-danger' role='alert'>Error: Estos equipos ya se han enfrentado en esta jornada.</div>";
             } else {
                 // Si no han jugado, procedemos a insertar el partido
-                $stmt_insert = $db->prepare("INSERT INTO partidos (id_equipo_local, id_equipo_visitante, jornada, resultado) VALUES (?, ?, ?, ?)");
-                $stmt_insert->bind_param("iiis", $idEquipoLocal, $idEquipoVisitante, $jornada, $resultado);
-
-                if ($stmt_insert->execute()) {
+                if ($partidoDAO->insert($idEquipoLocal, $idEquipoVisitante, $jornada, $resultado)) {
                     $mensaje = "<div class='alert alert-success' role='alert'>Partido añadido correctamente. La página se refrescará.</div>";
                     // Refrescar la página para ver el nuevo partido y limpiar el formulario
                     echo '<meta http-equiv="refresh" content="2">';
                 } else {
-                    $mensaje = "<div class='alert alert-danger' role='alert'>Error al añadir el partido: " . $stmt_insert->error . "</div>";
+                    $mensaje = "<div class='alert alert-danger' role='alert'>Error al añadir el partido.</div>";
                 }
-                $stmt_insert->close();
             }
-            $stmt_check->close();
         }
     } else {
         $mensaje = "<div class='alert alert-warning' role='alert'>Todos los campos son obligatorios.</div>";
     }
 }
 
-// --- Lógica de la página ---
-
 $jornada_seleccionada = $_GET['jornada'] ?? null;
-$where_clause = "";
-if ($jornada_seleccionada) {
-    $where_clause = "WHERE p.jornada = " . intval($jornada_seleccionada);
-}
 
-// Consulta para obtener los partidos (filtrados o no) con los nombres de los equipos y el estadio
-$sql_partidos = "SELECT 
-            p.jornada,
-            p.resultado,
-            equipo_local.nombre AS nombre_local,
-            equipo_visitante.nombre AS nombre_visitante,
-            equipo_local.estadio AS estadio
-        FROM partidos p
-        JOIN equipos AS equipo_local ON p.id_equipo_local = equipo_local.id
-        JOIN equipos AS equipo_visitante ON p.id_equipo_visitante = equipo_visitante.id
-        $where_clause
-        ORDER BY p.jornada ASC, p.id ASC";
-
-$resultado_partidos = $db->query($sql_partidos);
-$partidos = [];
-if ($resultado_partidos->num_rows > 0) {
-    while($fila = $resultado_partidos->fetch_assoc()) {
-        $partidos[] = $fila;
-    }
-}
-
-// Obtener todas las jornadas para el desplegable
-$jornadas_result = $db->query("SELECT DISTINCT jornada FROM partidos ORDER BY jornada ASC");
-$jornadas = [];
-while($fila = $jornadas_result->fetch_assoc()) {
-    $jornadas[] = $fila['jornada'];
-}
+// Obtener los partidos (filtrados o no) usando el DAO
+$partidos = $partidoDAO->selectAllWithTeamNames($jornada_seleccionada);
 
 // Obtener todos los equipos para los desplegables del formulario
-$equipos_result = $db->query("SELECT id, nombre FROM equipos ORDER BY nombre ASC");
-$equipos = [];
-while($fila = $equipos_result->fetch_assoc()) {
-    $equipos[] = $fila;
-}
+$equipos = $equipoDAO->selectAll();
 
-$db->close();
+// Obtener todas las jornadas para el filtro
+$jornadas = $partidoDAO->selectAllJornadas();
 ?>
 
 <div class="container mt-4">

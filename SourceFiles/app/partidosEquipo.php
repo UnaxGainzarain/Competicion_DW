@@ -9,22 +9,14 @@
  */
 
 require_once __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../persistence/DAO/GenericDAO.php';
+require_once __DIR__ . '/../persistence/conf/PersistentManager.php';
+require_once __DIR__ . '/../persistence/DAO/EquipoDAO.php';
+require_once __DIR__ . '/../persistence/DAO/PartidoDAO.php';
 
 // --- Lógica de Base de Datos ---
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "competicion";
-
-// Crear conexión
-$db = new mysqli($servername, $username, $password, $dbname);
-
-// Comprobar conexión
-if ($db->connect_error) {
-  die("La conexión ha fallado: " . $db->connect_error);
-}
-
+$equipoDAO = new EquipoDAO();
+$partidoDAO = new PartidoDAO();
 // Obtener el ID del equipo de la URL. Si no existe, redirigir.
 $equipo_id = $_GET['id'] ?? null;
 if (!$equipo_id) {
@@ -32,44 +24,19 @@ if (!$equipo_id) {
     exit;
 }
 
-// Usar sentencias preparadas para seguridad
-$stmt = $db->prepare("SELECT nombre FROM equipos WHERE id = ?");
-$stmt->bind_param("i", $equipo_id);
-$stmt->execute();
-$resultado_equipo = $stmt->get_result();
-$equipo = $resultado_equipo->fetch_assoc();
+// Obtener la información del equipo usando el DAO
+$equipo = $equipoDAO->selectById($equipo_id);
 
 if (!$equipo) {
     echo "<div class='container mt-4'><h2>Equipo no encontrado</h2></div>";
+    require_once __DIR__ . '/../templates/footer.php'; // Para cerrar bien la página
     exit;
 }
 
 $nombre_equipo = $equipo['nombre'];
 
-
-
-// Consulta para obtener los partidos del equipo (local o visitante)
-$stmt = $db->prepare("SELECT 
-            p.jornada,
-            p.resultado,
-            equipo_local.nombre AS nombre_local,
-            equipo_visitante.nombre AS nombre_visitante
-        FROM partidos p
-        JOIN equipos AS equipo_local ON p.id_equipo_local = equipo_local.id
-        JOIN equipos AS equipo_visitante ON p.id_equipo_visitante = equipo_visitante.id
-        WHERE p.id_equipo_local = ? OR p.id_equipo_visitante = ?
-        ORDER BY p.jornada ASC");
-$stmt->bind_param("ii", $equipo_id, $equipo_id);
-$stmt->execute();
-$resultado_partidos = $stmt->get_result();
-
-$partidos = [];
-while($fila = $resultado_partidos->fetch_assoc()) {
-    $partidos[] = $fila;
-}
-
-$stmt->close();
-$db->close();
+// Obtener los partidos del equipo usando el nuevo método del DAO
+$partidos = $partidoDAO->selectPartidosByEquipo($equipo_id);
 ?>
 
 <div class="container mt-4">
