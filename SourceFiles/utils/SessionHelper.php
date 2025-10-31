@@ -11,9 +11,7 @@
  */
 class SessionHelper {
 
-  /**
-   * Checks if the session is not started. In that case, it calls start.
-   */
+
   static function startSessionIfNotStarted() {
     if (session_status() == PHP_SESSION_NONE) {
         session_start([
@@ -38,24 +36,42 @@ class SessionHelper {
     if (!isset($_SESSION['CREATED'])) {
       $_SESSION['CREATED'] = time();
     } else if (time() - $_SESSION['CREATED'] > 1800) {
-      // session started more than 30 minutes ago
-      session_regenerate_id(true);    // change session ID for the current session and invalidate old session ID
-      $_SESSION['CREATED'] = time();  // update creation time
+      session_regenerate_id(true);   
+      $_SESSION['CREATED'] = time(); 
     }
   }
 
   static function loggedIn() {
     self::startSessionIfNotStarted();
     if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
-      // last request was more than 30 minutes ago
-      session_unset();     // unset $_SESSION variable for the run-time
-      session_destroy();   // destroy session data in storage
+     
+      session_unset();    
+      session_destroy();   
     }
-    $_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
+    $_SESSION['LAST_ACTIVITY'] = time();
     if (isset($_SESSION['user'])) {
       return true;
     } else {
       return false;
     }
   }
+
+  /**
+   * Guarda el ID del último equipo visitado en la sesión.
+   * @param int $team_id El ID del equipo.
+   */
+  static function setLastVisitedTeam($team_id) {
+    self::startSessionIfNotStarted();
+    $_SESSION['last_visited_team_id'] = $team_id;
+  }
+
+  /**
+   * Obtiene el ID del último equipo visitado desde la sesión.
+   * @return int|null El ID del equipo o null si no existe.
+   */
+  static function getLastVisitedTeam() {
+    self::startSessionIfNotStarted();
+    return $_SESSION['last_visited_team_id'] ?? null;
+  }
+
 }

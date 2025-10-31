@@ -8,6 +8,9 @@
  * @author     Ander Frago & Miguel Goyena <miguel_goyena@cuatrovientos.org>
  */
 
+require_once __DIR__ . '/../utils/SessionHelper.php';
+SessionHelper::startSessionIfNotStarted();
+
 // Definimos la constante BASE_URL para construir las rutas correctamente.
 // En un proyecto más grande, esto estaría en un archivo de configuración central.
 define('BASE_URL', '/Competicion/SourceFiles');
