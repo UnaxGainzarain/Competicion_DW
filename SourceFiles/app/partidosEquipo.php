@@ -34,13 +34,13 @@ $equipo = $equipoDAO->selectById($equipo_id);
 
 if (!$equipo) {
     echo "<div class='container mt-4'><h2>Equipo no encontrado</h2></div>";
-    require_once __DIR__ . '/../templates/footer.php'; // Para cerrar bien la página
+    require_once __DIR__ . '/../templates/footer.php';
     exit;
 }
 
 $nombre_equipo = $equipo['nombre'];
 
-// Obtener los partidos del equipo usando el nuevo método del DAO
+// Obtener los partidos del equipo usando el Dao
 $partidos = $partidoDAO->selectPartidosByEquipo($equipo_id);
 ?>
 
