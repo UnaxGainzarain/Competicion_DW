@@ -21,7 +21,7 @@ Aplicación web simple desarrollada en PHP puro para gestionar los equipos y par
 ## Tecnologías Utilizadas
 
 - **Backend**: PHP 8.x
-- **Base de Datos**: MySQL / MariaDB
+- **Base de Datos**: HeidiSQL
 - **Frontend**: HTML5, CSS3, Bootstrap 5
 
 ## Requisitos
@@ -30,7 +30,7 @@ Para ejecutar este proyecto, necesitarás un entorno de desarrollo local que inc
 
 - [XAMPP](https://www.apachefriends.org/es/index.html), WAMP, MAMP o similar.
 - PHP 8.0 o superior.
-- MySQL o MariaDB.
+- HeidiSQL.
 
 ## Instalación y Puesta en Marcha
 
@@ -46,7 +46,7 @@ Coloca los ficheros del proyecto en el directorio `htdocs` de tu instalación de
 2.  Crea una nueva base de datos. Puedes llamarla `competicion_db`.
 3.  Selecciona la base de datos recién creada y ve a la pestaña **SQL**.
 4.  Copia y ejecuta el siguiente código SQL para crear las tablas `equipos` y `partidos`:
-5.  Tambíen puedo hacer inserts para añadir datos a la base de datos.
+5.  Tambíen puedes hacer los inserts para añadir datos a la base de datos.
 
 
 ```sql
@@ -91,7 +91,7 @@ INSERT INTO `partidos` (`id_equipo_local`, `id_equipo_visitante`, `jornada`, `re
 La aplicación lee las credenciales de la base de datos desde un fichero `credentials.json`.
 
 1.  Navega a la carpeta `SourceFiles/persistence/conf/`.
-2.  Midifica el fichero llamado `credentials.json`.
+2.  Modifica el fichero llamado `credentials.json`.
 3.  Reemplaza el siguiente contenido por los valores de tu configuración local:
 
 ```json
@@ -116,8 +116,8 @@ Abre tu navegador y accede a la URL correspondiente a tu configuración. Por eje
 ├── SourceFiles/
 │   ├── app/            # Ficheros principales de la aplicación (vistas/controladores)
 │   ├── assets/         # Recursos como CSS y JS (Bootstrap)
-│   ├── persistence/    # Lógica de acceso a datos (DAO, PersistentManager)
-│   ├── templates/      # Partes reutilizables de la interfaz (header, footer)
+│   ├── persistence/    # Lógica de acceso a datos (EquipoDAO, PersistentManager)
+│   ├── templates/      # Partes reutilizables de la interfaz (header)
 │   └── utils/          # Clases de utilidad (SessionHelper)
 └── README.md           # Este fichero
 ```
